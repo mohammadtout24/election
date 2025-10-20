@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
+import sys # ADDED: Required for checking management commands
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -17,14 +18,19 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ('true', '1')
 # Reading SECRET_KEY from environment variable
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
+# Detect if we are running a management command during the build phase (like collectstatic)
+# This allows the settings file to load even if the SECRET_KEY is not available in the build environment.
+IS_BUILD_COMMAND = any(cmd in sys.argv for cmd in ['collectstatic', 'makemigrations'])
+
 if not SECRET_KEY:
-    if DEBUG:
-        # FIX: Use a dummy key for local development only if DEBUG is True
-        print("WARNING: Using insecure default SECRET_KEY because DEBUG is True.")
+    if DEBUG or IS_BUILD_COMMAND:
+        # FIX: Use a dummy key for local development or for safe build commands
+        print("WARNING: Using insecure default SECRET_KEY for local development or build command.")
         # NOTE: Generate a real key if you share this code or move to staging!
         SECRET_KEY = 'insecure-default-key-for-local-dev-only' 
     else:
         # Raise an error if the SECRET_KEY is not set in production (DEBUG=False)
+        # This will fail the application if the webserver starts without a key, ensuring security.
         raise ImproperlyConfigured("The SECRET_KEY environment variable must be set when DEBUG is False.")
 
 
