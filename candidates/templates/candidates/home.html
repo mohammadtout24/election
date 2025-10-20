@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>المرشحون للانتخابات</title>
+    <style>
+        body {
+            font-family: "Cairo", "Tahoma", sans-serif;
+            padding: 30px;
+            background-color: #f0f4f8;
+            direction: rtl;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 35px;
+            border-radius: 14px;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #007bff;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+            text-align: right;
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+
+        .login-link {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .login-link a {
+            color: purple;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .candidate-card {
+            background-color: #f9fbfc;
+            padding: 20px;
+            border-radius: 10px;
+            border-right: 6px solid #28a745;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: flex-start;
+            transition: background-color 0.3s;
+        }
+
+        .candidate-card:hover {
+            background-color: #e6f7ff;
+        }
+
+        label {
+            cursor: pointer;
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
+            flex-direction: row-reverse;
+            gap: 15px;
+        }
+
+        input[type="radio"] {
+            margin: 10px 0 0 15px;
+            transform: scale(1.3);
+            cursor: pointer;
+        }
+
+        .candidate-photo {
+            width: 160px;
+            height: 200px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 2px solid #007bff;
+            flex-shrink: 0;
+        }
+
+        .candidate-info {
+            flex-grow: 1;
+            text-align: right;
+            color: #333;
+        }
+
+        .candidate-info strong {
+            display: block;
+            color: #0d6efd;
+            font-size: 1.3em;
+            margin-bottom: 6px;
+        }
+
+        .candidate-info small {
+            color: #6c757d;
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        /* CKEditor specific styles for proper spacing and RTL alignment */
+        .candidate-info p {
+            margin: 8px 0;
+            font-size: 1em;
+            line-height: 1.8;
+        }
+
+        .candidate-info ul,
+        .candidate-info ol {
+            margin: 8px 0 8px 0;
+            /* Add padding to the RIGHT for RTL list markers */
+            padding: 0 25px 0 0; 
+            text-align: right;
+            line-height: 1.8;
+            list-style-position: outside; /* Helps visibility */
+        }
+
+        .candidate-info li {
+            margin-bottom: 4px;
+        }
+        /* End CKEditor styles */
+
+        .vote-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            margin-top: 25px;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        .vote-btn:hover {
+            background-color: #0056b3;
+            transform: scale(1.03);
+        }
+
+        .message {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: right;
+            font-weight: 500;
+        }
+
+        ul.results {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        ul.results li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            border-bottom: 1px dashed #ced4da;
+            padding-bottom: 8px;
+        }
+
+        .vote-count-info {
+            font-weight: bold;
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="login-link">
+        {% if user.is_authenticated %}
+        <a href="{% url 'logout' %}">تسجيل الخروج</a>
+        {% else %}
+        <a href="{% url 'login' %}">تسجيل دخول المرشح</a>
+        {% endif %}
+    </div>
+
+    <h1>المرشحون للانتخابات</h1>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="message">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+
+    {% if has_voted %}
+    
+        {% if not is_admin %}
+        <p><strong>لقد أدليت بصوتك بالفعل{% if voted_for_name %} لصالح {{ voted_for_name }}{% endif %}.</strong></p>
+        {% endif %}
+    
+        {% if candidates_with_votes and total_votes > 0 %}
+        <h2 style="text-align: right;">النتائج المباشرة</h2>
+        <ul class="results">
+            {% for item in candidates_with_votes %}
+            <li>
+                {% if item.candidate.image %}
+                <img src="{{ item.candidate.image.url }}" alt="{{ item.candidate.name }}"
+                     style="width: 45px; height: 45px; border-radius: 8px; margin-left: 10px;">
+                {% endif %}
+                <strong>{{ item.candidate.name }}</strong>
+                <span class="vote-count-info">
+                    ({{ item.vote_percentage }}%) {{ item.vote_count }} صوت
+                </span>
+            </li>
+            {% endfor %}
+        </ul>
+        <p style="text-align: right;"><strong>إجمالي الأصوات:</strong> {{ total_votes }}</p>
+        {% endif %}
+
+    {% else %}
+    {% if candidates_with_votes and not is_admin %}
+    <form method="POST" action="{% url 'submit_vote' %}">
+        {% csrf_token %}
+        {% for item in candidates_with_votes %}
+        <div class="candidate-card">
+            <input type="radio" name="vote" value="{{ item.candidate.id }}" id="candidate{{ item.candidate.id }}">
+            <label for="candidate{{ item.candidate.id }}">
+                {% if item.candidate.image %}
+                <img src="{{ item.candidate.image.url }}" alt="{{ item.candidate.name }}" class="candidate-photo">
+                {% endif %}
+                <div class="candidate-info">
+                    <strong>{{ item.candidate.name }}</strong>
+                    <small>{{ item.candidate.party }}</small>
+                    {{ item.candidate.description|safe }}
+                </div>
+            </label>
+        </div>
+        {% endfor %}
+        <button type="submit" class="vote-btn">أرسل الصوت</button>
+    </form>
+    {% else %}
+    <p style="text-align: right;">لم يتم تسجيل مرشحين بعد.</p>
+    {% endif %}
+    {% endif %}
+</div>
+</body>
+</html>
