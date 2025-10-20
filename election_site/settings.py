@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-er0jayjfdjcdpy&jfkfjq4w@^^f4-_9%wyx6lw&7(cqf)^wr&r
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['https://election-btyx.onrender.com/', '127.0.0.1']
+ALLOWED_HOSTS = ['election-btyx.onrender.com', '127.0.0.1']
 
 
 # Application definition
