@@ -10,18 +10,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # 1. SECURITY AND ENVIRONMENT CONFIGURATION
 # =========================================================================
 
-# The application failed because SECRET_KEY was not set and DEBUG was likely True.
-# In a production environment like Render, you MUST read these from environment variables.
+# Reading DEBUG flag first. Default to False for production if not set.
+# Use an environment variable like DJANGO_DEBUG=True for development/staging environments.
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ('true', '1')
 
 # Reading SECRET_KEY from environment variable
 SECRET_KEY = os.environ.get('SECRET_KEY')
-if not SECRET_KEY:
-    # Raise an error if the SECRET_KEY is not set in production
-    raise ImproperlyConfigured("The SECRET_KEY environment variable must be set in production.")
 
-# Reading DEBUG flag. Default to False for production if not set.
-# Use an environment variable like DJANGO_DEBUG=True for development/staging environments.
-DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ('true', '1')
+if not SECRET_KEY:
+    if DEBUG:
+        # FIX: Use a dummy key for local development only if DEBUG is True
+        print("WARNING: Using insecure default SECRET_KEY because DEBUG is True.")
+        # NOTE: Generate a real key if you share this code or move to staging!
+        SECRET_KEY = 'insecure-default-key-for-local-dev-only' 
+    else:
+        # Raise an error if the SECRET_KEY is not set in production (DEBUG=False)
+        raise ImproperlyConfigured("The SECRET_KEY environment variable must be set when DEBUG is False.")
+
 
 # This is the FIX for the DisallowedHost error.
 # We read the primary host from a Render environment variable or fallback to an
@@ -36,7 +41,12 @@ if RENDER_EXTERNAL_HOSTNAME:
 
 # Fallback for generic ALLOWED_HOSTS variable
 if os.environ.get('ALLOWED_HOSTS'):
-    ALLOWED_HOSTS.extend(os.environ.get('ALLOWED_HOSTS').split(','))
+    # Extend list, splitting comma-separated values from the environment variable
+    ALLOWED_HOSTS.extend(
+        host.strip()
+        for host in os.environ.get('ALLOWED_HOSTS').split(',')
+        if host.strip()
+    )
 
 
 # Recommended setting for running behind a proxy like Render
